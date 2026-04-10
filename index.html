@@ -1,0 +1,518 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Calcolatore Vendo Oro</title>
+    <style>
+        /* --- Variabili personalizzabili --- */
+        :root {
+            --bg: #f7f7f8;
+            --card-bg: #ffffff;
+            --accent: #b8860b;
+            --accent-light: #f5e6c8;
+            --text: #1a1a1a;
+            --text-muted: #666;
+            --border: #e0e0e0;
+            --green: #27ae60;
+            --red: #c0392b;
+            --radius: 10px;
+            --shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+            --font: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+        }
+
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+
+        body {
+            font-family: var(--font);
+            background: var(--bg);
+            color: var(--text);
+            padding: 24px 16px;
+            max-width: 520px;
+            margin: 0 auto;
+            line-height: 1.6;
+        }
+
+        h1 {
+            text-align: center;
+            font-size: 1.4rem;
+            font-weight: 700;
+            margin-bottom: 24px;
+            color: var(--accent);
+        }
+
+        /* --- Card --- */
+        .card {
+            background: var(--card-bg);
+            border-radius: var(--radius);
+            box-shadow: var(--shadow);
+            padding: 20px;
+            margin-bottom: 16px;
+        }
+
+        .card h2 {
+            font-size: 0.8rem;
+            text-transform: uppercase;
+            letter-spacing: 1.2px;
+            color: var(--text-muted);
+            margin-bottom: 16px;
+        }
+
+        /* --- Campi input --- */
+        .field {
+            margin-bottom: 14px;
+        }
+
+        .field:last-child {
+            margin-bottom: 0;
+        }
+
+        .field label {
+            display: block;
+            font-size: 0.85rem;
+            font-weight: 600;
+            margin-bottom: 4px;
+            color: var(--text-muted);
+        }
+
+        .field-row {
+            display: flex;
+            gap: 8px;
+            align-items: center;
+        }
+
+        .field input {
+            width: 100%;
+            flex: 1;
+            min-width: 0;
+            padding: 10px 12px;
+            border: 1.5px solid var(--border);
+            border-radius: 6px;
+            font-size: 1rem;
+            font-family: var(--font);
+            transition: border-color 0.2s;
+            outline: none;
+        }
+
+        .field input:focus {
+            border-color: var(--accent);
+        }
+
+        /* --- Pulsante aggiorna quotazione --- */
+        .btn-fetch {
+            padding: 10px 14px;
+            background: var(--accent);
+            color: white;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 0.85rem;
+            font-weight: 600;
+            white-space: nowrap;
+            transition: opacity 0.2s;
+        }
+
+        .btn-fetch:hover { opacity: 0.85; }
+        .btn-fetch:disabled { opacity: 0.5; cursor: wait; }
+
+        /* --- Stato fetch --- */
+        .fetch-status {
+            font-size: 0.75rem;
+            color: var(--text-muted);
+            margin-top: 4px;
+            min-height: 1.2em;
+        }
+
+        .fetch-status.error { color: var(--red); }
+        .fetch-status.ok { color: var(--green); }
+
+        /* --- Righe risultati --- */
+        .result-row {
+            display: flex;
+            justify-content: space-between;
+            align-items: baseline;
+            padding: 10px 0;
+            border-bottom: 1px solid var(--border);
+        }
+
+        .result-row:last-child { border-bottom: none; }
+
+        .result-label {
+            font-size: 0.85rem;
+            color: var(--text-muted);
+        }
+
+        .result-value {
+            font-size: 1.1rem;
+            font-weight: 700;
+            font-variant-numeric: tabular-nums;
+        }
+
+        .result-detail {
+            font-size: 0.75rem;
+            color: var(--text-muted);
+            font-weight: 400;
+        }
+
+        .result-row.highlight .result-value {
+            color: var(--accent);
+            font-size: 1.2rem;
+        }
+
+        .result-row.loss .result-value {
+            color: var(--red);
+        }
+
+        /* --- Sezione note --- */
+        .notes {
+            background: var(--card-bg);
+            border-radius: var(--radius);
+            box-shadow: var(--shadow);
+            padding: 20px;
+            margin-top: 16px;
+        }
+
+        .notes h2 {
+            font-size: 0.8rem;
+            text-transform: uppercase;
+            letter-spacing: 1.2px;
+            color: var(--text-muted);
+            margin-bottom: 12px;
+        }
+
+        .notes ul {
+            list-style: none;
+            padding: 0;
+        }
+
+        .notes li {
+            font-size: 0.85rem;
+            color: var(--text);
+            padding: 8px 0;
+            border-bottom: 1px solid var(--border);
+            line-height: 1.5;
+        }
+
+        .notes li:last-child { border-bottom: none; }
+
+        .notes a {
+            color: var(--accent);
+            text-decoration: none;
+        }
+
+        .notes a:hover { text-decoration: underline; }
+
+        .notes code {
+            background: var(--bg);
+            padding: 2px 6px;
+            border-radius: 4px;
+            font-size: 0.8rem;
+        }
+
+        /* --- Footer --- */
+        .footer {
+            text-align: center;
+            font-size: 0.7rem;
+            color: var(--text-muted);
+            margin-top: 20px;
+            opacity: 0.6;
+        }
+
+        .footer a {
+            color: var(--text-muted);
+            text-decoration: none;
+        }
+
+        .footer a:hover { text-decoration: underline; }
+    </style>
+</head>
+<body>
+
+    <h1>Calcolatore Vendo Oro</h1>
+
+    <!-- =======================================
+         SEZIONE INPUT
+         ======================================= -->
+    <div class="card">
+        <h2>Parametri</h2>
+
+        <!-- Quotazione oro 24 carati (EUR/g) -->
+        <div class="field">
+            <label for="quot24">Quotazione 24 kt (EUR/g)</label>
+            <div class="field-row">
+                <input type="text" id="quot24" inputmode="decimal" placeholder="es. 130,52">
+                <button class="btn-fetch" id="btnFetch" onclick="fetchQuotazione()">Aggiorna</button>
+            </div>
+            <div class="fetch-status" id="fetchStatus"></div>
+        </div>
+
+        <!-- Offerta del compro oro per 18 carati (EUR/g) -->
+        <div class="field">
+            <label for="offerta18">Offerta 18 kt (EUR/g)</label>
+            <input type="text" id="offerta18" inputmode="decimal" placeholder="es. 83,21">
+        </div>
+
+        <!-- Peso totale in grammi -->
+        <div class="field">
+            <label for="totG">Peso totale (g)</label>
+            <input type="text" id="totG" inputmode="decimal" placeholder="es. 100,00">
+        </div>
+    </div>
+
+    <!-- =======================================
+         SEZIONE RISULTATI
+         ======================================= -->
+    <div class="card" id="risultati">
+        <h2>Risultati</h2>
+
+        <div class="result-row">
+            <span class="result-label">Valore 18 kt / g</span>
+            <span class="result-value" id="val18"></span>
+        </div>
+
+        <div class="result-row">
+            <span class="result-label">Commissione</span>
+            <span class="result-value" id="com"></span>
+        </div>
+
+        <div class="result-row highlight">
+            <span class="result-label">Valore reale totale</span>
+            <span class="result-value" id="reale"></span>
+        </div>
+
+        <div class="result-row highlight">
+            <span class="result-label">Incasso netto</span>
+            <span class="result-value" id="netto"></span>
+        </div>
+
+        <div class="result-row loss">
+            <span class="result-label">Perdita su commissione</span>
+            <span class="result-value" id="perdita"></span>
+        </div>
+    </div>
+
+    <!-- =======================================
+         NOTE UTILI
+         ======================================= -->
+    <div class="notes">
+        <h2>Note utili</h2>
+        <ul>
+            <li>
+                Prima di vendere, verificare che l'operatore sia regolarmente iscritto
+                al registro <strong>OAM</strong> (Organismo degli Agenti e dei Mediatori) consultando
+                <a href="https://www.organismo-am.it/elenchi-registri/compro_oro" target="_blank" rel="noopener">
+                l'elenco ufficiale dei compro oro</a>.
+            </li>
+            <li>
+                Livelli indicativi di commissione:
+                <strong>bassa</strong> 5 &ndash; 10%,
+                <strong>media</strong> 15 &ndash; 25%,
+                <strong>alta</strong> &gt; 30%.
+            </li>
+            <li>
+                Per quantitativi superiori a <strong>100 g</strong> si puo generalmente
+                ottenere una riduzione della commissione applicata.
+            </li>
+            <li>
+                L'offerta piu vantaggiosa si ottiene di norma con la
+                <strong>ri&ndash;alienazione diretta</strong>, ovvero la vendita
+                senza passare per intermediari.
+            </li>
+            <li>
+                La cessione di oro <strong>18 kt</strong> da parte di privati
+                <strong>non e soggetta a tassazione</strong>.
+            </li>
+            <li>
+                Per importi rilevanti, preferire il pagamento tramite
+                <strong>bonifico istantaneo</strong>.
+            </li>
+            <li>
+                Documenti richiesti: carta d'identita, codice fiscale, IBAN.
+            </li>
+        </ul>
+    </div>
+
+    <div class="footer">
+        Quotazione oro spot:
+        <a href="https://www.swissquote.com" target="_blank" rel="noopener">Swissquote</a>
+    </div>
+
+    <!-- =======================================
+         JAVASCRIPT
+         ======================================= -->
+    <script>
+    /* -----------------------------------------
+       CONFIGURAZIONE
+       (modificare qui i parametri principali)
+       ----------------------------------------- */
+
+    // Swissquote: quotazione spot XAU/EUR (via allOrigins per CORS)
+    var API_URL = "https://gold-proxy.fedevaleri.workers.dev";
+
+    // Fattore conversione 24 kt -> 18 kt (18/24 = 0.75)
+    var FATTORE_18KT = 0.75;
+
+    // Grammi in un'oncia troy
+    var GRAMMI_PER_ONCIA = 31.1035;
+
+    // Timeout fetch in millisecondi
+    var FETCH_TIMEOUT = 10000;
+
+    /* -----------------------------------------
+       RIFERIMENTI AGLI ELEMENTI DOM
+       ----------------------------------------- */
+
+    var elQuot24    = document.getElementById("quot24");
+    var elOfferta18 = document.getElementById("offerta18");
+    var elTotG      = document.getElementById("totG");
+    var elStatus    = document.getElementById("fetchStatus");
+    var elBtn       = document.getElementById("btnFetch");
+    var elRisultati = document.getElementById("risultati");
+    var elVal18     = document.getElementById("val18");
+    var elCom       = document.getElementById("com");
+    var elReale     = document.getElementById("reale");
+    var elNetto     = document.getElementById("netto");
+    var elPerdita   = document.getElementById("perdita");
+
+    /* -----------------------------------------
+       FETCH QUOTAZIONE ORO
+       Swissquote XAU/EUR (prezzo spot in EUR
+       per oncia troy, convertito in EUR/g).
+       ----------------------------------------- */
+
+    async function fetchQuotazione() {
+        elBtn.disabled = true;
+        elStatus.className = "fetch-status";
+        elStatus.textContent = "Recupero quotazione in corso...";
+
+        try {
+            var controller = new AbortController();
+            var timer = setTimeout(function() { controller.abort(); }, FETCH_TIMEOUT);
+
+            var resp = await fetch(API_URL, { signal: controller.signal });
+            clearTimeout(timer);
+            if (!resp.ok) throw new Error("HTTP " + resp.status);
+
+            var data = await resp.json();
+            var prezzoOncia = data[0].spreadProfilePrices[0].bid;
+            var prezzo = prezzoOncia / GRAMMI_PER_ONCIA;
+
+            elQuot24.value = fmtNum(prezzo);
+            elStatus.className = "fetch-status ok";
+            elStatus.textContent = fmtNum(prezzo) + " EUR/g (Swissquote spot)";
+            calcola();
+        } catch (e) {
+            elStatus.className = "fetch-status error";
+            elStatus.textContent = "Quotazione non disponibile. Inserire manualmente.";
+        }
+
+        elBtn.disabled = false;
+    }
+
+    /* -----------------------------------------
+       CALCOLI PRINCIPALI
+       Ricalcola tutti i risultati ogni volta
+       che un input cambia.
+
+       Formule:
+         val18   = quot24 * 0.75
+         ratio   = offerta18 / val18
+         comm%   = (1 - ratio) * 100
+         reale   = val18 * totG
+         netto   = reale * ratio
+         perdita = reale - netto
+       ----------------------------------------- */
+
+    function calcola() {
+        var quot24    = parseIta(elQuot24.value);
+        var offerta18 = parseIta(elOfferta18.value);
+        var totG      = parseIta(elTotG.value);
+
+        // Serve almeno la quotazione 24 kt per mostrare qualcosa
+        if (!quot24 || quot24 <= 0) {
+            return;
+        }
+
+        // Valore teorico 18 kt per grammo
+        var val18 = quot24 * FATTORE_18KT;
+        elVal18.textContent = fmtNum(val18) + " EUR/g";
+
+        // Senza offerta non posso calcolare la commissione
+        if (!offerta18 || offerta18 <= 0) {
+            elCom.textContent     = "\u2013";
+            elReale.textContent   = "\u2013";
+            elNetto.textContent   = "\u2013";
+            elPerdita.textContent = "\u2013";
+            return;
+        }
+
+        // Rapporto offerta / valore reale (es. 0.85 = commissione del 15%)
+        var rapporto = offerta18 / val18;
+        var commissione = (1 - rapporto) * 100;
+        elCom.innerHTML = commissione.toFixed(0) + "%"
+            + ' <span class="result-detail">(' + rapporto.toFixed(2) + ")</span>";
+
+        // Senza peso totale non posso calcolare i totali
+        if (!totG || totG <= 0) {
+            elReale.textContent   = "\u2013";
+            elNetto.textContent   = "\u2013";
+            elPerdita.textContent = "\u2013";
+            return;
+        }
+
+        // Valore reale = quanto vale l'oro al prezzo di mercato
+        var reale = val18 * totG;
+        elReale.textContent = fmtEuro(reale);
+
+        // Incasso netto = quanto il compro oro effettivamente paga
+        var netto = reale * rapporto;
+        elNetto.textContent = fmtEuro(netto);
+
+        // Perdita = differenza trattenuta come commissione
+        var perdita = reale - netto;
+        elPerdita.textContent = "\u2212" + fmtEuro(perdita);
+    }
+
+    /* -----------------------------------------
+       FORMATTAZIONE
+       ----------------------------------------- */
+
+    // Converte input italiano (virgola decimale) in numero
+    function parseIta(str) {
+        if (!str) return NaN;
+        return parseFloat(str.replace(",", "."));
+    }
+
+    // Formatta un numero con 2 decimali e virgola decimale (formato italiano)
+    function fmtNum(n) {
+        return Math.abs(n).toFixed(2).replace(".", ",");
+    }
+
+    // Formatta un importo in euro con separatore migliaia (.) e decimale (,)
+    function fmtEuro(n) {
+        var str = Math.abs(n).toFixed(2);
+        var parti = str.split(".");
+        parti[0] = parti[0].replace(/\B(?=(\d{3})+(?!\d))/g, ".");
+        return parti.join(",") + " \u20AC";
+    }
+
+    /* -----------------------------------------
+       EVENT LISTENERS
+       Ricalcola automaticamente ad ogni
+       modifica dei campi di input.
+       ----------------------------------------- */
+
+    elQuot24.addEventListener("input", calcola);
+    elOfferta18.addEventListener("input", calcola);
+    elTotG.addEventListener("input", calcola);
+
+    // Reset valori al caricamento (evita che il browser conservi i dati dopo refresh)
+    elQuot24.value = "";
+    elOfferta18.value = "";
+    elTotG.value = "";
+    // Recupera la quotazione all'apertura della pagina
+    fetchQuotazione();
+    </script>
+
+</body>
+</html>
