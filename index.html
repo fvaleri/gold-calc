@@ -252,9 +252,9 @@
             <input type="text" id="totG" inputmode="decimal" placeholder="es. 100,00">
         </div>
 
-        <!-- Incasso netto (totale pagato dal compro oro) -->
+        <!-- Offerta totale (totale pagato dal compro oro) -->
         <div class="field">
-            <label for="incasso">Incasso netto (EUR)</label>
+            <label for="incasso">Offerta totale (EUR)</label>
             <input type="text" id="incasso" inputmode="decimal" placeholder="es. 8321,00">
         </div>
     </div>
@@ -275,12 +275,12 @@
             <span class="result-value" id="offerta18g"></span>
         </div>
 
-        <div class="result-row">
+        <div class="result-row highlight">
             <span class="result-label">Commissione</span>
             <span class="result-value" id="com"></span>
         </div>
 
-        <div class="result-row highlight">
+        <div class="result-row">
             <span class="result-label">Valore reale totale</span>
             <span class="result-value" id="reale"></span>
         </div>
@@ -446,7 +446,7 @@
             return;
         }
 
-        // Offerta per grammo = incasso netto / peso totale
+        // Offerta per grammo = offerta totale / peso totale
         var offerta18 = incasso / totG;
         elOfferta18g.textContent = fmtNum(offerta18) + " EUR/g";
 
