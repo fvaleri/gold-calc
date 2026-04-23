@@ -428,13 +428,16 @@
         var totG    = parseIta(elTotG.value);
         var incasso = parseIta(elIncasso.value);
 
+        // Serve almeno la quotazione 24 kt per mostrare qualcosa
         if (!quot24 || quot24 <= 0) {
             return;
         }
 
+        // Valore teorico 18 kt per grammo
         var val18 = quot24 * FATTORE_18KT;
         elVal18.textContent = fmtNum(val18) + " EUR/g";
 
+        // Senza peso e incasso non posso calcolare il resto
         if (!totG || totG <= 0 || !incasso || incasso <= 0) {
             elOfferta18g.textContent = "\u2013";
             elCom.textContent        = "\u2013";
@@ -443,17 +446,20 @@
             return;
         }
 
+        // Offerta per grammo = incasso netto / peso totale
         var offerta18 = incasso / totG;
         elOfferta18g.textContent = fmtNum(offerta18) + " EUR/g";
 
+        // Commissione applicata dal compro oro
         var rapporto = offerta18 / val18;
         var commissione = (1 - rapporto) * 100;
-        elCom.innerHTML = commissione.toFixed(0) + "%"
-            + ' <span class="result-detail">(' + rapporto.toFixed(2) + ")</span>";
+        elCom.textContent = commissione.toFixed(0) + " %";
 
+        // Valore reale = quanto vale l'oro al prezzo di mercato
         var reale = val18 * totG;
         elReale.textContent = fmtEuro(reale);
 
+        // Perdita = differenza trattenuta come commissione
         var perdita = reale - incasso;
         elPerdita.textContent = "\u2212" + fmtEuro(perdita);
     }
