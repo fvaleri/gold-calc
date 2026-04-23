@@ -246,16 +246,16 @@
             <div class="fetch-status" id="fetchStatus"></div>
         </div>
 
-        <!-- Offerta del compro oro per 18 carati (EUR/g) -->
-        <div class="field">
-            <label for="offerta18">Offerta 18 kt (EUR/g)</label>
-            <input type="text" id="offerta18" inputmode="decimal" placeholder="es. 83,21">
-        </div>
-
         <!-- Peso totale in grammi -->
         <div class="field">
             <label for="totG">Peso totale (g)</label>
             <input type="text" id="totG" inputmode="decimal" placeholder="es. 100,00">
+        </div>
+
+        <!-- Incasso netto (totale pagato dal compro oro) -->
+        <div class="field">
+            <label for="incasso">Incasso netto (EUR)</label>
+            <input type="text" id="incasso" inputmode="decimal" placeholder="es. 8321,00">
         </div>
     </div>
 
@@ -270,6 +270,11 @@
             <span class="result-value" id="val18"></span>
         </div>
 
+        <div class="result-row highlight">
+            <span class="result-label">Offerta 18 kt / g</span>
+            <span class="result-value" id="offerta18g"></span>
+        </div>
+
         <div class="result-row">
             <span class="result-label">Commissione</span>
             <span class="result-value" id="com"></span>
@@ -278,11 +283,6 @@
         <div class="result-row highlight">
             <span class="result-label">Valore reale totale</span>
             <span class="result-value" id="reale"></span>
-        </div>
-
-        <div class="result-row highlight">
-            <span class="result-label">Incasso netto</span>
-            <span class="result-value" id="netto"></span>
         </div>
 
         <div class="result-row loss">
@@ -362,17 +362,17 @@
        RIFERIMENTI AGLI ELEMENTI DOM
        ----------------------------------------- */
 
-    var elQuot24    = document.getElementById("quot24");
-    var elOfferta18 = document.getElementById("offerta18");
-    var elTotG      = document.getElementById("totG");
-    var elStatus    = document.getElementById("fetchStatus");
-    var elBtn       = document.getElementById("btnFetch");
-    var elRisultati = document.getElementById("risultati");
-    var elVal18     = document.getElementById("val18");
-    var elCom       = document.getElementById("com");
-    var elReale     = document.getElementById("reale");
-    var elNetto     = document.getElementById("netto");
-    var elPerdita   = document.getElementById("perdita");
+    var elQuot24     = document.getElementById("quot24");
+    var elTotG       = document.getElementById("totG");
+    var elIncasso    = document.getElementById("incasso");
+    var elStatus     = document.getElementById("fetchStatus");
+    var elBtn        = document.getElementById("btnFetch");
+    var elRisultati  = document.getElementById("risultati");
+    var elVal18      = document.getElementById("val18");
+    var elOfferta18g = document.getElementById("offerta18g");
+    var elCom        = document.getElementById("com");
+    var elReale      = document.getElementById("reale");
+    var elPerdita    = document.getElementById("perdita");
 
     /* -----------------------------------------
        FETCH QUOTAZIONE ORO
@@ -415,61 +415,46 @@
        che un input cambia.
 
        Formule:
-         val18   = quot24 * 0.75
-         ratio   = offerta18 / val18
-         comm%   = (1 - ratio) * 100
-         reale   = val18 * totG
-         netto   = reale * ratio
-         perdita = reale - netto
+         val18     = quot24 * 0.75
+         offerta18 = incasso / totG
+         ratio     = offerta18 / val18
+         comm%     = (1 - ratio) * 100
+         reale     = val18 * totG
+         perdita   = reale - incasso
        ----------------------------------------- */
 
     function calcola() {
-        var quot24    = parseIta(elQuot24.value);
-        var offerta18 = parseIta(elOfferta18.value);
-        var totG      = parseIta(elTotG.value);
+        var quot24  = parseIta(elQuot24.value);
+        var totG    = parseIta(elTotG.value);
+        var incasso = parseIta(elIncasso.value);
 
-        // Serve almeno la quotazione 24 kt per mostrare qualcosa
         if (!quot24 || quot24 <= 0) {
             return;
         }
 
-        // Valore teorico 18 kt per grammo
         var val18 = quot24 * FATTORE_18KT;
         elVal18.textContent = fmtNum(val18) + " EUR/g";
 
-        // Senza offerta non posso calcolare la commissione
-        if (!offerta18 || offerta18 <= 0) {
-            elCom.textContent     = "\u2013";
-            elReale.textContent   = "\u2013";
-            elNetto.textContent   = "\u2013";
-            elPerdita.textContent = "\u2013";
+        if (!totG || totG <= 0 || !incasso || incasso <= 0) {
+            elOfferta18g.textContent = "\u2013";
+            elCom.textContent        = "\u2013";
+            elReale.textContent      = "\u2013";
+            elPerdita.textContent    = "\u2013";
             return;
         }
 
-        // Rapporto offerta / valore reale (es. 0.85 = commissione del 15%)
+        var offerta18 = incasso / totG;
+        elOfferta18g.textContent = fmtNum(offerta18) + " EUR/g";
+
         var rapporto = offerta18 / val18;
         var commissione = (1 - rapporto) * 100;
         elCom.innerHTML = commissione.toFixed(0) + "%"
             + ' <span class="result-detail">(' + rapporto.toFixed(2) + ")</span>";
 
-        // Senza peso totale non posso calcolare i totali
-        if (!totG || totG <= 0) {
-            elReale.textContent   = "\u2013";
-            elNetto.textContent   = "\u2013";
-            elPerdita.textContent = "\u2013";
-            return;
-        }
-
-        // Valore reale = quanto vale l'oro al prezzo di mercato
         var reale = val18 * totG;
         elReale.textContent = fmtEuro(reale);
 
-        // Incasso netto = quanto il compro oro effettivamente paga
-        var netto = reale * rapporto;
-        elNetto.textContent = fmtEuro(netto);
-
-        // Perdita = differenza trattenuta come commissione
-        var perdita = reale - netto;
+        var perdita = reale - incasso;
         elPerdita.textContent = "\u2212" + fmtEuro(perdita);
     }
 
@@ -503,13 +488,12 @@
        ----------------------------------------- */
 
     elQuot24.addEventListener("input", calcola);
-    elOfferta18.addEventListener("input", calcola);
     elTotG.addEventListener("input", calcola);
+    elIncasso.addEventListener("input", calcola);
 
-    // Reset valori al caricamento (evita che il browser conservi i dati dopo refresh)
     elQuot24.value = "";
-    elOfferta18.value = "";
     elTotG.value = "";
+    elIncasso.value = "";
     // Recupera la quotazione all'apertura della pagina
     fetchQuotazione();
     </script>
