@@ -281,12 +281,12 @@
         </div>
 
         <div class="result-row">
-            <span class="result-label">Valore reale totale</span>
+            <span class="result-label">Valore totale</span>
             <span class="result-value" id="reale"></span>
         </div>
 
         <div class="result-row loss">
-            <span class="result-label">Perdita su commissione</span>
+            <span class="result-label">Perdita commissione</span>
             <span class="result-value" id="perdita"></span>
         </div>
     </div>
@@ -321,10 +321,6 @@
             <li>
                 La cessione di oro <strong>18 kt</strong> da parte di privati
                 <strong>non e soggetta a tassazione</strong>.
-            </li>
-            <li>
-                Per importi rilevanti, preferire il pagamento tramite
-                <strong>bonifico istantaneo</strong>.
             </li>
             <li>
                 Documenti richiesti: carta d'identita, codice fiscale, IBAN.
@@ -437,29 +433,31 @@
         var val18 = quot24 * FATTORE_18KT;
         elVal18.textContent = fmtNum(val18) + " EUR/g";
 
-        // Senza peso e incasso non posso calcolare il resto
-        if (!totG || totG <= 0 || !incasso || incasso <= 0) {
+        if (!totG || totG <= 0) {
+            elReale.textContent      = "\u2013";
             elOfferta18g.textContent = "\u2013";
             elCom.textContent        = "\u2013";
-            elReale.textContent      = "\u2013";
             elPerdita.textContent    = "\u2013";
             return;
         }
 
-        // Offerta per grammo = offerta totale / peso totale
+        var reale = val18 * totG;
+        elReale.textContent = fmtEuro(reale);
+
+        if (!incasso || incasso <= 0) {
+            elOfferta18g.textContent = "\u2013";
+            elCom.textContent        = "\u2013";
+            elPerdita.textContent    = "\u2013";
+            return;
+        }
+
         var offerta18 = incasso / totG;
         elOfferta18g.textContent = fmtNum(offerta18) + " EUR/g";
 
-        // Commissione applicata dal compro oro
         var rapporto = offerta18 / val18;
         var commissione = (1 - rapporto) * 100;
         elCom.textContent = commissione.toFixed(0) + " %";
 
-        // Valore reale = quanto vale l'oro al prezzo di mercato
-        var reale = val18 * totG;
-        elReale.textContent = fmtEuro(reale);
-
-        // Perdita = differenza trattenuta come commissione
         var perdita = reale - incasso;
         elPerdita.textContent = "\u2212" + fmtEuro(perdita);
     }
